@@ -1,7 +1,6 @@
 # Netbeans files #
-[Bb]uid
-[Dd]ist
-nbproject
+/[Dd]ist/
+/nbproject/
 
 *.class
 
@@ -9,3 +8,4 @@ nbproject
 *.jar
 *.war
 *.ear
+/build/
