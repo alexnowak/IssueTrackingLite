@@ -5,12 +5,16 @@
  */
 package issuetrackinglite.model;
 
+import db.Database;
 import issuetrackinglite.model.Issue.IssueStatus;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.MapChangeListener.Change;
@@ -18,6 +22,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 
 public class TrackingServiceStub implements TrackingService {
+    static final Logger logger = Logger.getLogger(TrackingServiceStub.class.getName());
 
     // You add a project by adding an entry with an empty observable array list
     // of issue IDs in the projects Map.
@@ -25,6 +30,14 @@ public class TrackingServiceStub implements TrackingService {
     {
         final Map<String, ObservableList<String>> map = new TreeMap<String, ObservableList<String>>();
         projectsMap = FXCollections.observableMap(map);
+        
+        // retrieve issues from db
+        try {
+            Database db = Database.getInstance();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE,Database.errorString(e),e);
+        }
+        
         for (String s : newList("Project1", "Project2", "Project3", "Project4")) {
             projectsMap.put(s, FXCollections.<String>observableArrayList());
         }

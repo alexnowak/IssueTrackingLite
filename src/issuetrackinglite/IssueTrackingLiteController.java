@@ -33,9 +33,15 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 
-public class IssueTrackingLiteController implements Initializable {
-    Logger logger = Logger.getLogger(this.getClass().getName());
+public class IssueTrackingLiteController {
 
+    static final Logger logger = Logger.getLogger(IssueTrackingLiteController.class.getName());
+
+    @FXML
+    private ResourceBundle resources;
+
+    @FXML
+    private URL location;
 
     @FXML
     Button newIssue;
@@ -60,7 +66,7 @@ public class IssueTrackingLiteController implements Initializable {
     private String displayedBugProject; // the name of the project of the bug displayed in the detailed section.
     @FXML
     Label displayedIssueLabel; // the displayedIssueLabel will contain a concatenation of the 
-                               // the project name and the bug id.
+    // the project name and the bug id.
     @FXML
     AnchorPane details;
     @FXML
@@ -69,13 +75,12 @@ public class IssueTrackingLiteController implements Initializable {
     TrackingService model = null;
     private TextField statusValue = new TextField();
     final ObservableList<ObservableIssue> tableContent = FXCollections.observableArrayList();
-    
-    
+
     /**
      * Initializes the controller class.
      */
-    @Override
-    public void initialize(URL url, ResourceBundle rsrcs) {
+    @FXML
+    void initialize() {
         assert colName != null : "fx:id=\"colName\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert colStatus != null : "fx:id=\"colStatus\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert colSynopsis != null : "fx:id=\"colSynopsis\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
@@ -83,22 +88,20 @@ public class IssueTrackingLiteController implements Initializable {
         assert descriptionValue != null : "fx:id=\"descriptionValue\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert details != null : "fx:id=\"details\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert displayedIssueLabel != null : "fx:id=\"displayedIssueLabel\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
+        assert list != null : "fx:id=\"list\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert newIssue != null : "fx:id=\"newIssue\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert saveIssue != null : "fx:id=\"saveIssue\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert synopsis != null : "fx:id=\"synopsis\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert table != null : "fx:id=\"table\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
-        assert list != null : "fx:id=\"list\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
-        
-        logger.log(Level.INFO,this.getClass().getSimpleName() + ".initialize: url="+url);
+
+        logger.info("initialize: url=" + location);
         configureButtons();
         configureDetails();
         configureTable();
         connectToService();
-        if (list != null) {
-            list.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-            list.getSelectionModel().selectedItemProperty().addListener(projectItemSelected);
-            displayedProjectNames.addListener(projectNamesListener);
-        }
+        list.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        list.getSelectionModel().selectedItemProperty().addListener(projectItemSelected);
+        displayedProjectNames.addListener(projectNamesListener);
     }
 
     /**
@@ -110,11 +113,9 @@ public class IssueTrackingLiteController implements Initializable {
         final String selectedProject = getSelectedProject();
         if (model != null && selectedProject != null) {
             ObservableIssue issue = model.createIssueFor(selectedProject);
-            if (table != null) {
-                // Select the newly created issue.
-                table.getSelectionModel().clearSelection();
-                table.getSelectionModel().select(issue);
-            }
+            // Select the newly created issue.
+            table.getSelectionModel().clearSelection();
+            table.getSelectionModel().select(issue);
         }
     }
 
@@ -165,39 +166,24 @@ public class IssueTrackingLiteController implements Initializable {
 
         updateSaveIssueButtonState();
     }
-    
-    private void configureButtons() {
-        if (newIssue != null) {
-            newIssue.setDisable(true);
-        }
-        if (saveIssue != null) {
-            saveIssue.setDisable(true);
-        }
-        if (deleteIssue != null) {
-            deleteIssue.setDisable(true);
-        }
-    }
-    
+
+
     // An observable list of project names obtained from the model.
     // This is a live list, and we will react to its changes by removing
     // and adding project names to/from our list widget.
     private ObservableList<String> displayedProjectNames;
-    
+
     // The list of Issue IDs relevant to the selected project. Can be null
     // if no project is selected. This list is obtained from the model.
     // This is a live list, and we will react to its changes by removing
     // and adding Issue objects to/from our table widget.
     private ObservableList<String> displayedIssues;
-    
+
     // This listener will listen to changes in the displayedProjectNames list,
     // and update our list widget in consequence.
     private final ListChangeListener<String> projectNamesListener = new ListChangeListener<String>() {
-
         @Override
         public void onChanged(Change<? extends String> c) {
-            if (projectsView == null) {
-                return;
-            }
             while (c.next()) {
                 if (c.wasAdded() || c.wasReplaced()) {
                     for (String p : c.getAddedSubList()) {
@@ -213,16 +199,13 @@ public class IssueTrackingLiteController implements Initializable {
             FXCollections.sort(projectsView);
         }
     };
-    
+
     // This listener will listen to changes in the displayedIssues list,
     // and update our table widget in consequence.
     private final ListChangeListener<String> projectIssuesListener = new ListChangeListener<String>() {
 
         @Override
         public void onChanged(Change<? extends String> c) {
-            if (table == null) {
-                return;
-            }
             while (c.next()) {
                 if (c.wasAdded() || c.wasReplaced()) {
                     for (String p : c.getAddedSubList()) {
@@ -265,11 +248,11 @@ public class IssueTrackingLiteController implements Initializable {
         projectsView.addAll(sortedProjects);
         list.setItems(projectsView);
     }
-    
+
     // This listener listen to changes in the table widget selection and
     // update the DeleteIssue button state accordingly.
-    private final ListChangeListener<ObservableIssue> tableSelectionChanged =
-            new ListChangeListener<ObservableIssue>() {
+    private final ListChangeListener<ObservableIssue> tableSelectionChanged
+            = new ListChangeListener<ObservableIssue>() {
 
                 @Override
                 public void onChanged(Change<? extends ObservableIssue> c) {
@@ -289,7 +272,7 @@ public class IssueTrackingLiteController implements Initializable {
             if (displayedIssueLabel != null) {
                 displayedBugId = selectedIssue.getId();
                 displayedBugProject = selectedIssue.getProjectName();
-                displayedIssueLabel.setText( displayedBugId + " / " + displayedBugProject );
+                displayedIssueLabel.setText(displayedBugId + " / " + displayedBugProject);
             }
             if (synopsis != null) {
                 synopsis.setText(nonNull(selectedIssue.getSynopsis()));
@@ -353,7 +336,7 @@ public class IssueTrackingLiteController implements Initializable {
             }
             return IssueStatus.valueOf(statusValue.getText().trim());
         }
-        
+
         @Override
         public String getProjectName() {
             if (displayedBugProject == null || isEmpty(displayedIssueLabel.getText())) {
@@ -409,59 +392,18 @@ public class IssueTrackingLiteController implements Initializable {
     }
 
     private void updateDeleteIssueButtonState() {
-        boolean disable = true;
-        if (deleteIssue != null && table != null) {
-            final boolean nothingSelected = table.getSelectionModel().getSelectedItems().isEmpty();
-            disable = nothingSelected;
-        }
-        if (deleteIssue != null) {
-            deleteIssue.setDisable(disable);
-        }
+        final boolean nothingSelected = table.getSelectionModel().getSelectedItems().isEmpty();
+        deleteIssue.setDisable(nothingSelected);
     }
 
     private void updateSaveIssueButtonState() {
-        boolean disable = true;
-        if (saveIssue != null && table != null) {
-            final boolean nothingSelected = table.getSelectionModel().getSelectedItems().isEmpty();
-            disable = nothingSelected;
+        final boolean nothingSelected = table.getSelectionModel().getSelectedItems().isEmpty();
+        if (nothingSelected) {
+            saveIssue.setDisable(true);
+            return;
         }
-        if (disable == false) {
-            disable = computeSaveState(new DetailsData(), getSelectedIssue()) != SaveState.UNSAVED;
-        }
-        if (saveIssue != null) {
-            saveIssue.setDisable(disable);
-        }
-    }
-
-    // Configure the table widget: set up its column, and register the
-    // selection changed listener.
-    private void configureTable() {
-        colName.setCellValueFactory(new PropertyValueFactory<ObservableIssue, String>("id"));
-        colSynopsis.setCellValueFactory(new PropertyValueFactory<ObservableIssue, String>("synopsis"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<ObservableIssue, IssueStatus>("status"));
-
-        // In order to limit the amount of setup in Getting Started we set the width
-        // of the 3 columns programmatically but one can do it from SceneBuilder.
-        colName.setPrefWidth(75);
-        colStatus.setPrefWidth(75);
-        colSynopsis.setPrefWidth(443);
-
-        colName.setMinWidth(75);
-        colStatus.setMinWidth(75);
-        colSynopsis.setMinWidth(443);
-
-        colName.setMaxWidth(750);
-        colStatus.setMaxWidth(750);
-        colSynopsis.setMaxWidth(4430);
-
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        table.setItems(tableContent);
-        assert table.getItems() == tableContent;
-
-        final ObservableList<ObservableIssue> tableSelection = table.getSelectionModel().getSelectedItems();
-
-        tableSelection.addListener(tableSelectionChanged);
+        boolean disable = computeSaveState(new DetailsData(), getSelectedIssue()) != SaveState.UNSAVED;
+        saveIssue.setDisable(disable);
     }
 
     /**
@@ -488,13 +430,12 @@ public class IssueTrackingLiteController implements Initializable {
         }
         return null;
     }
-    
+
     /**
      * Listen to changes in the list selection, and updates the table widget and
      * DeleteIssue and NewIssue buttons accordingly.
      */
     private final ChangeListener<String> projectItemSelected = new ChangeListener<String>() {
-
         @Override
         public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
             projectUnselected(oldValue);
@@ -536,6 +477,48 @@ public class IssueTrackingLiteController implements Initializable {
         }
     }
 
+    /**
+     * Initialize New/Save/Del buttons. Disable all.
+     */
+    private void configureButtons() {
+        newIssue.setDisable(true);
+        saveIssue.setDisable(true);
+        deleteIssue.setDisable(true);
+    }
+
+    /**
+     * Configure the table widget: set up its column, and register the 
+     * selection changed listener.
+     */
+    private void configureTable() {
+        colName.setCellValueFactory(new PropertyValueFactory<ObservableIssue, String>("id"));
+        colSynopsis.setCellValueFactory(new PropertyValueFactory<ObservableIssue, String>("synopsis"));
+        colStatus.setCellValueFactory(new PropertyValueFactory<ObservableIssue, IssueStatus>("status"));
+
+        // In order to limit the amount of setup in Getting Started we set the width
+        // of the 3 columns programmatically but one can do it from SceneBuilder.
+        colName.setPrefWidth(75);
+        colStatus.setPrefWidth(75);
+        colSynopsis.setPrefWidth(443);
+
+        colName.setMinWidth(75);
+        colStatus.setMinWidth(75);
+        colSynopsis.setMinWidth(443);
+
+        colName.setMaxWidth(750);
+        colStatus.setMaxWidth(750);
+        colSynopsis.setMaxWidth(4430);
+
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        table.setItems(tableContent);
+        assert table.getItems() == tableContent;
+
+        final ObservableList<ObservableIssue> tableSelection = table.getSelectionModel().getSelectedItems();
+
+        tableSelection.addListener(tableSelectionChanged);
+    }
+
     private void configureDetails() {
         if (details != null) {
             details.setVisible(false);
@@ -543,7 +526,6 @@ public class IssueTrackingLiteController implements Initializable {
 
         if (details != null) {
             details.addEventFilter(EventType.ROOT, new EventHandler<Event>() {
-
                 @Override
                 public void handle(Event event) {
                     if (event.getEventType() == MouseEvent.MOUSE_RELEASED

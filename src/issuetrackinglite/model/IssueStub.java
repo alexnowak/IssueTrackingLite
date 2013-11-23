@@ -98,4 +98,3 @@ import javafx.beans.value.ObservableValue;
             return description;
         }
     }
-

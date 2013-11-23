@@ -12,7 +12,8 @@ public interface TrackingService {
 
     public ObservableList<String> getIssueIds(String projectName);
     public ObservableList<String> getProjectNames();
-    public ObservableIssue getIssue(String tickectId);
+    public ObservableIssue getIssue(String ticketId);
+
     public ObservableIssue createIssueFor(String projectName);
     public void deleteIssue(String issueId);
     public void saveIssue(String issueId, IssueStatus status,
