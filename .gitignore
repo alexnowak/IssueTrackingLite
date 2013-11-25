@@ -2,10 +2,18 @@
 /[Dd]ist/
 /nbproject/
 
+# Backup, logs, class files #
 *.class
+*.bak
+*.log
 
 # Package Files #
 *.jar
 *.war
 *.ear
 /build/
+
+# Database files #
+/db/
+
+

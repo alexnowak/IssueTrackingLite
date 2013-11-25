@@ -15,8 +15,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+
     static final Logger logger = Logger.getLogger(Main.class.getName());
-    
+
     @Override
     public void start(Stage primaryStage) {
         logger.info("Starting JavaFX application.");
@@ -27,9 +28,9 @@ public class Main extends Application {
         logger.fine("FINE");
         logger.finer("FINER");
         logger.finest("FINEST");
-        
-        System.getProperties().list(System.out);
-      
+
+  //      System.getProperties().list(System.out);
+
         try {
             AnchorPane page = (AnchorPane) FXMLLoader.load(Main.class.getResource("IssueTrackingLite.fxml"));
             Scene scene = new Scene(page);
@@ -38,15 +39,12 @@ public class Main extends Application {
             primaryStage.show();
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "JavaFX Error", ex);
-            if (ex instanceof InvocationTargetException) {
-                logger.severe("InvocationTargetException: Cause: "+ ((InvocationTargetException)ex).getCause());
-            }
         }
     }
 
     @Override
-    public void stop() throws Exception{
-        logger.log(Level.INFO,"Stopping JavaFX application.");
+    public void stop() throws Exception {
+        logger.log(Level.INFO, "Stopping JavaFX application.");
     }
- 
+
 }

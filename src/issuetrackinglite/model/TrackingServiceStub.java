@@ -5,7 +5,7 @@
  */
 package issuetrackinglite.model;
 
-import db.Database;
+import issuetrackinglite.db.Database;
 import issuetrackinglite.model.Issue.IssueStatus;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -26,22 +26,12 @@ public class TrackingServiceStub implements TrackingService {
 
     // You add a project by adding an entry with an empty observable array list
     // of issue IDs in the projects Map.
-    final ObservableMap<String, ObservableList<String>> projectsMap;
-    {
-        final Map<String, ObservableList<String>> map = new TreeMap<String, ObservableList<String>>();
-        projectsMap = FXCollections.observableMap(map);
-        
-        // retrieve issues from db
-        try {
-            Database db = Database.getInstance();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE,Database.errorString(e),e);
-        }
-        
-        for (String s : newList("Project1", "Project2", "Project3", "Project4")) {
-            projectsMap.put(s, FXCollections.<String>observableArrayList());
-        }
-    }
+    ObservableMap<String, ObservableList<String>> projectsMap;
+    ObservableMap<String, IssueStub> issuesMap;
+    ObservableList<String> projectNames;
+
+    Map<String, ObservableList<String>> map = new TreeMap<String, ObservableList<String>>();
+    AtomicInteger issueCounter = new AtomicInteger(0);
 
     // The projectNames list is kept in sync with the project's map by observing
     // the projectsMap and modifying the projectNames list in consequence.
@@ -52,36 +42,32 @@ public class TrackingServiceStub implements TrackingService {
             if (change.wasRemoved()) projectNames.remove(change.getKey());
         }
     };
-    final ObservableList<String> projectNames;
-    {
+    
+    public TrackingServiceStub()   {
+        projectsMap = FXCollections.observableMap(map);
+        
+        // retrieve projects from db
+        try {
+            Database db = Database.getInstance();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE,Database.errorString(e),e);
+        }
+    
+/**
+    private static <T> List<T> newList(T... items) {
+        return Arrays.asList(items);
+    }
+   **/
+        for (String s : Arrays.asList("Project1", "Project2", "Project3", "Project4")) {
+            projectsMap.put(s, FXCollections.<String>observableArrayList());
+        }
+
         projectNames = FXCollections.<String>observableArrayList();
         projectNames.addAll(projectsMap.keySet());
         projectsMap.addListener(projectsMapChangeListener);
-    }
 
-
-    // You create new issue by adding a IssueStub instance to the issuesMap.
-    // the new id will be automatically added to the corresponding list in
-    // the projectsMap.
-    //
-    final MapChangeListener<String, IssueStub> issuesMapChangeListener = new MapChangeListener<String, IssueStub>() {
-        @Override
-        public void onChanged(Change<? extends String, ? extends IssueStub> change) {
-            if (change.wasAdded()) {
-                final IssueStub val = change.getValueAdded();
-                projectsMap.get(val.getProjectName()).add(val.getId());
-            }
-            if (change.wasRemoved()) {
-                final IssueStub val = change.getValueRemoved();
-                projectsMap.get(val.getProjectName()).remove(val.getId());
-            }
-        }
-    };
     
-    final AtomicInteger issueCounter = new AtomicInteger(0);
-    final ObservableMap<String, IssueStub> issuesMap;
-    {
-        final Map<String, IssueStub> map = new TreeMap<String, IssueStub>();
+            final Map<String, IssueStub> map = new TreeMap<String, IssueStub>();
         issuesMap = FXCollections.observableMap(map);
         issuesMap.addListener(issuesMapChangeListener);
         IssueStub ts;
@@ -109,13 +95,28 @@ public class TrackingServiceStub implements TrackingService {
         ts = createIssueFor("Project4");
         ts.setSynopsis("The Wanderings of Oisin");
         ts.setDescription("William Butler Yeats.");
-    }
 
-    private static <T> List<T> newList(T... items) {
-        return Arrays.asList(items);
     }
 
 
+    // You create new issue by adding a IssueStub instance to the issuesMap.
+    // the new id will be automatically added to the corresponding list in
+    // the projectsMap.
+    //
+    final MapChangeListener<String, IssueStub> issuesMapChangeListener = new MapChangeListener<String, IssueStub>() {
+        @Override
+        public void onChanged(Change<? extends String, ? extends IssueStub> change) {
+            if (change.wasAdded()) {
+                final IssueStub val = change.getValueAdded();
+                projectsMap.get(val.getProjectName()).add(val.getId());
+            }
+            if (change.wasRemoved()) {
+                final IssueStub val = change.getValueRemoved();
+                projectsMap.get(val.getProjectName()).remove(val.getId());
+            }
+        }
+    };
+    
     @Override
     public IssueStub createIssueFor(String projectName) {
         assert projectNames.contains(projectName);
