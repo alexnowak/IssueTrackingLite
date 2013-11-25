@@ -7,7 +7,9 @@ package issuetrackinglite.model;
 
 import issuetrackinglite.db.Database;
 import issuetrackinglite.model.Issue.IssueStatus;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -43,25 +45,19 @@ public class TrackingServiceStub implements TrackingService {
         }
     };
     
-    public TrackingServiceStub()   {
+    public TrackingServiceStub() throws SQLException {
         projectsMap = FXCollections.observableMap(map);
         
         // retrieve projects from db
-        try {
-            Database db = Database.getInstance();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE,Database.errorString(e),e);
+        Database db = Database.getInstance();
+        try (Statement s = db.getConnection().createStatement() ) {
+            ResultSet rs = s.executeQuery("select * from Project");
+            while (rs.next()) {
+                projectsMap.put(rs.getString("Name"), FXCollections.<String>observableArrayList());
+            }
         }
-    
-/**
-    private static <T> List<T> newList(T... items) {
-        return Arrays.asList(items);
-    }
-   **/
-        for (String s : Arrays.asList("Project1", "Project2", "Project3", "Project4")) {
-            projectsMap.put(s, FXCollections.<String>observableArrayList());
-        }
-
+  
+        
         projectNames = FXCollections.<String>observableArrayList();
         projectNames.addAll(projectsMap.keySet());
         projectsMap.addListener(projectsMapChangeListener);

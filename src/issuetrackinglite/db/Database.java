@@ -75,6 +75,9 @@ public class Database {
         }
     }
 
+    public Connection getConnection() {
+        return conn;
+    }
     public static Database getInstance() throws SQLException {
         if (instance == null) {
             instance = new Database(DB_NAME,DB_PORT,DB_HOST);
@@ -151,7 +154,7 @@ public class Database {
             int nIssue = 0;
             for (int i = 1; i < 10; i++) {
                 s.executeUpdate(
-                        "insert into Project values(" + i + ", 'Project " + i + "')");
+                        "insert into Project values(" + i + ", 'Project" + i + "')");
 
                 logger.fine("Loading ISSUE data for Project ID" + i + "...");
                 for (int j = 0; j < 50; j++) {
