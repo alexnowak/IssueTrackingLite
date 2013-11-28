@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -28,104 +29,108 @@ public class TrackingServiceStub implements TrackingService {
 
     // You add a project by adding an entry with an empty observable array list
     // of issue IDs in the projects Map.
-    ObservableMap<String, ObservableList<String>> projectsMap;
-    ObservableMap<String, IssueStub> issuesMap;
+    ObservableMap<Integer, Project> projectsMap;
+    ObservableMap<Integer, Issue> issuesMap;
     ObservableList<String> projectNames;
 
-    Map<String, ObservableList<String>> map = new TreeMap<String, ObservableList<String>>();
     AtomicInteger issueCounter = new AtomicInteger(0);
 
-    // The projectNames list is kept in sync with the project's map by observing
-    // the projectsMap and modifying the projectNames list in consequence.
-    final MapChangeListener<String, ObservableList<String>> projectsMapChangeListener = new MapChangeListener<String, ObservableList<String>>() {
-        @Override
-        public void onChanged(Change<? extends String, ? extends ObservableList<String>> change) {
-            if (change.wasAdded()) projectNames.add(change.getKey());
-            if (change.wasRemoved()) projectNames.remove(change.getKey());
-        }
-    };
     
     public TrackingServiceStub() throws SQLException {
-        projectsMap = FXCollections.observableMap(map);
+        
+        final TreeMap<Integer,Project> projects = new TreeMap<Integer,Project>();
+        projectsMap = FXCollections.observableMap(projects);
         
         // retrieve projects from db
         Database db = Database.getInstance();
         try (Statement s = db.getConnection().createStatement() ) {
             ResultSet rs = s.executeQuery("select * from Project");
+            logger.info("Number of projects: " + rs.getFetchSize());
             while (rs.next()) {
-                projectsMap.put(rs.getString("Name"), FXCollections.<String>observableArrayList());
+                Integer projId = rs.getInt("Id");
+                Project proj = new Project(projId, rs.getString("Name"));
+                projectsMap.put(projId, proj);
             }
-        }
   
         
-        projectNames = FXCollections.<String>observableArrayList();
-        projectNames.addAll(projectsMap.keySet());
-        projectsMap.addListener(projectsMapChangeListener);
+    //        projectNames = FXCollections.<String>observableArrayList();
+     //       projectNames.addAll(projectsMap.keySet());
 
-    
-            final Map<String, IssueStub> map = new TreeMap<String, IssueStub>();
-        issuesMap = FXCollections.observableMap(map);
-        issuesMap.addListener(issuesMapChangeListener);
-        IssueStub ts;
-        ts = createIssueFor("Project1");
-        ts.setSynopsis("We rode in sorrow, with strong hounds three");
-        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-        ts = createIssueFor("Project1");
-        ts.setSynopsis("Bran, Sgeolan, and Lomair");
-        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-        ts = createIssueFor("Project2");
-        ts.setSynopsis("On a morning misty and mild and fair");
-        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-        ts = createIssueFor("Project4");
-        ts.setSynopsis("The mist-drops hung on the fragrant trees");
-        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-        ts = createIssueFor("Project3");
-        ts.setSynopsis("And in the blossoms hung the bees");
-        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-        ts = createIssueFor("Project2");
-        ts.setSynopsis("We rode in sadness above Lough Lean");
-        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-        ts = createIssueFor("Project1");
-        ts.setSynopsis("For our best were dead on Gavra's green");
-        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-        ts = createIssueFor("Project4");
-        ts.setSynopsis("The Wanderings of Oisin");
-        ts.setDescription("William Butler Yeats.");
+                // The projectNames list is kept in sync with the project's map by observing
+            // the projectsMap and modifying the projectNames list in consequence.
+            MapChangeListener<Integer,Project> projectsMapChangeListener = new MapChangeListener<Integer,Project>() {
+                @Override
+                public void onChanged(Change<? extends Integer, ? extends Project> change) {
+                    if (change.wasAdded()) {
+                        //Integer projId = change.getKey()+1;
+                        //Project proj = new Project(projId, projName);
+                        // TODO: Persist new project
+                        logger.info("Adding project: " + change.getValueAdded());
+                                
+                        projectsMap.put(change.getValueAdded().getId(),change.getValueAdded());
+                    }
+                    if (change.wasRemoved()) {
+                        projectsMap.remove(change.getKey());
+                        // TODO: Remove project
+                        // projectNames.remove(change.getKey());
+                        logger.severe("TODO: Remove project from map and database.");
+                    }
+                }
+            };
 
-    }
+            projectsMap.addListener(projectsMapChangeListener);
+
+            Map<Integer, Issue> issues = new TreeMap<Integer, Issue>();
+            issuesMap = FXCollections.observableMap(issues);
 
 
-    // You create new issue by adding a IssueStub instance to the issuesMap.
-    // the new id will be automatically added to the corresponding list in
-    // the projectsMap.
-    //
-    final MapChangeListener<String, IssueStub> issuesMapChangeListener = new MapChangeListener<String, IssueStub>() {
-        @Override
-        public void onChanged(Change<? extends String, ? extends IssueStub> change) {
-            if (change.wasAdded()) {
-                final IssueStub val = change.getValueAdded();
-                projectsMap.get(val.getProjectName()).add(val.getId());
-            }
-            if (change.wasRemoved()) {
-                final IssueStub val = change.getValueRemoved();
-                projectsMap.get(val.getProjectName()).remove(val.getId());
+    // You create new issue by adding a Issue instance to the issuesMap.
+            // the new id will be automatically added to the corresponding list in
+            // the projectsMap.
+            //
+            MapChangeListener<Integer, Issue> issuesMapChangeListener = new MapChangeListener<Integer, Issue>() {
+                @Override
+                public void onChanged(Change<? extends Integer, ? extends Issue> change) {
+                    if (change.wasAdded()) {
+                        Issue val = change.getValueAdded();
+                        //projectsMap.get(val.getProjectName()).add(val.getId());
+                        logger.severe("TODO: ADD Issue - "+val);
+                    }
+                    if (change.wasRemoved()) {
+                        Issue val = change.getValueRemoved();
+                        logger.severe("TODO: REMOVE Issue - "+val);
+                    }
+                }
+            };
+            
+            issuesMap.addListener(issuesMapChangeListener);
+
+            rs = s.executeQuery("select * from Issue");
+            logger.info("Number of issues: " + rs.getFetchSize());
+            while (rs.next()) {
+                int id = rs.getInt("Id");
+                int projId = rs.getInt("projId");
+                int status = rs.getInt("Status");
+                String synopsis = rs.getString("Synopsis");
+                String description = rs.getString("Description");
+                
+//                    + "Id INTEGER PRIMARY KEY, "
+//                    + "ProjectId INTEGER, " // foreign key to project related to issue
+//                    + "Status INTEGER, "
+//                    + "Synopsis VARCHAR(1024), "
+//                    + "Description VARCHAR(32000) "  // TODO: this should be probably a blob or clob? max length is 32672
+                
+                Issue issue = new Issue(id, projId, projectsMap.get(projId).getName(), IssueStatus.NEW,synopsis, description);
+                issuesMap.put(issue.getId(), issue);
             }
         }
-    };
-    
-    @Override
-    public IssueStub createIssueFor(String projectName) {
-        assert projectNames.contains(projectName);
-        final IssueStub issue = new IssueStub(projectName, "TT-"+issueCounter.incrementAndGet());
-        assert issuesMap.containsKey(issue.getId()) == false;
-        assert projectsMap.get(projectName).contains(issue.getId()) == false;
-        issuesMap.put(issue.getId(), issue);
-        return issue;
+        
+        
     }
 
+
     @Override
-    public void deleteIssue(String issueId) {
-        assert issuesMap.containsKey(issueId);
+    public void deleteIssue(int issueId) {
         issuesMap.remove(issueId);
     }
 
@@ -135,22 +140,17 @@ public class TrackingServiceStub implements TrackingService {
     }
 
     @Override
-    public ObservableList<String> getIssueIds(String projectName) {
-        return projectsMap.get(projectName);
-    }
-
-    @Override
-    public IssueStub getIssue(String issueId) {
-        return issuesMap.get(issueId);
-    }
-
-    @Override
     public void saveIssue(String issueId, IssueStatus status,
             String synopsis, String description) {
-        IssueStub issue = getIssue(issueId);
+        Issue issue = issuesMap.get(issueId);
         issue.setDescription(description);
         issue.setSynopsis(synopsis);
         issue.setStatus(status);
     }
 
+
+    @Override
+    public ObservableList<String> getIssueIds(String projectName) {
+        return null;
+    }
 }
