@@ -42,7 +42,12 @@ public class TrackingServiceStub implements TrackingService {
         projectsMap = FXCollections.observableMap(projects);
         
         // retrieve projects from db
-        Database db = Database.getInstance();
+        Database db=null;
+        try {
+            db = Database.getInstance();
+        } catch (Exception e) {
+            logger.severe("Caught something in TrackingServiceStub constructor....");
+        }
         try (Statement s = db.getConnection().createStatement() ) {
             ResultSet rs = s.executeQuery("select * from Project");
             logger.info("Number of projects: " + rs.getFetchSize());

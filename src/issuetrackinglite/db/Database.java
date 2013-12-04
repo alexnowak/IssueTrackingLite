@@ -8,6 +8,7 @@ package issuetrackinglite.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLDataException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.Statement;
@@ -55,7 +56,7 @@ public class Database {
         
         try {
             conn = DriverManager.getConnection(connectionUrl,p);
-        } catch (SQLNonTransientConnectionException e ) {
+        } catch (SQLException e ) {
             // This is kind of a dirty hack sql. code 080004 can have a few other 
             // causes other than missing database name....
             // However, the error msg contains "[...]database <name> not found[...]"
@@ -70,8 +71,13 @@ public class Database {
                 initializeDatabase();
             } else {
                 // Error other than db not exists error occured.
-                throw e;
+                logger.log(Level.SEVERE,"Dude, I am so outa here...: SQL State: "+e.getSQLState(),e);
+//                throw new SQLException("Database connection error: " + e.getMessage() + "\nSee stacktrace above.");
+                throw new SQLDataException(e);
             }
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE,"Unable to connect to database. See exception below: ", ex);
+            throw new SQLDataException(ex);
         }
     }
 

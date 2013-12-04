@@ -98,7 +98,7 @@ public class IssueTrackingLiteController {
      * Initializes the controller class.
      */
     @FXML
-    void initialize() throws SQLException {
+    void init() throws SQLException {
         assert colName != null : "fx:id=\"colName\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert colStatus != null : "fx:id=\"colStatus\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert colSynopsis != null : "fx:id=\"colSynopsis\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
@@ -386,27 +386,23 @@ public class IssueTrackingLiteController {
      *
      */
     public String getSelectedProject() {
-        if (model != null && list != null) {
-            final ObservableList<String> selectedProjectItem = list.getSelectionModel().getSelectedItems();
-            final String selectedProject = selectedProjectItem.get(0);
-            return selectedProject;
-        }
-        return null;
+        final ObservableList<String> selectedProjectItem = list.getSelectionModel().getSelectedItems();
+        final String selectedProject = selectedProjectItem.get(0);
+        return selectedProject;
     }
 
     public Issue getSelectedIssue() {
-        if (model != null && table != null) {
-            List<Issue> selectedIssues = table.getSelectionModel().getSelectedItems();
-            if (selectedIssues.size() == 1) {
-                final Issue selectedIssue = selectedIssues.get(0);
-                return selectedIssue;
-            }
+        List<Issue> selectedIssues = table.getSelectionModel().getSelectedItems();
+        if (selectedIssues.size() == 1) {
+            final Issue selectedIssue = selectedIssues.get(0);
+            return selectedIssue;
         }
         return null;
     }
 
     // Called when a project is unselected.
     private void projectUnselected(String oldProjectName) {
+        logger.finest("projectUnselected called! oldProjectName="+oldProjectName);
         if (oldProjectName != null) {
             displayedIssues.removeListener(projectIssuesListener);
             displayedIssues = null;
@@ -423,19 +419,27 @@ public class IssueTrackingLiteController {
 
     // Called when a project is selected.
     private void projectSelected(String newProjectName) {
+        logger.finest("projectSelected called! newProjectName="+newProjectName);
+        
         if (newProjectName != null) {
             table.getItems().clear();
             displayedIssues = model.getIssueIds(newProjectName);
-            for (String id : displayedIssues) {
-                Issue issue = model.getIssue(id);
-                table.getItems().add(issue);
-            }
+            
+            logger.fine("Project \""+newProjectName+"\" has " + displayedIssues.size() + " issue(s).");
+            
+
+// TODO: Finish this...           
+//            for (String id : displayedIssues) {
+//                Issue issue = model.getIssue(id);
+//                table.getItems().add(issue);
+//            }
 
             projectIssuesListener = new ListChangeListener<String>() {
                 @Override
                 public void onChanged(Change<? extends String> c) {
                     while (c.next()) {
                         if (c.wasAdded() || c.wasReplaced()) {
+                            logger.finest("Item " + c + " has been added or replaced.");
                             for (String p : c.getAddedSubList()) {
 //                                table.getItems().add(model.getIssue(p));
                                 table.getItems().add(new Issue(-1,-1,"bla",Issue.IssueStatus.NEW,"bla","bla"));
@@ -449,15 +453,15 @@ public class IssueTrackingLiteController {
                                 // we need to loop over the table content instead.
                                 // Then we need to remove it - but outside of the for loop
                                 // to avoid ConcurrentModificationExceptions.
-                                for (Issue t : table.getItems()) {
-                                    if (t.getId().equals(p)) {
-                                        removed = t;
-                                        break;
-                                    }
-                                }
-                                if (removed != null) {
-                                    table.getItems().remove(removed);
-                                }
+//                                for (Issue t : table.getItems()) {
+//                                    if (t.getId().equals(p)) {
+//                                        removed = t;
+//                                        break;
+//                                    }
+//                                }
+//                                if (removed != null) {
+//                                    table.getItems().remove(removed);
+//                                }
                             }
                         }
                     }
@@ -516,9 +520,11 @@ public class IssueTrackingLiteController {
         ListChangeListener<Issue> tableSelectionChanged = new ListChangeListener<Issue>() {
                 @Override
                 public void onChanged(Change<? extends Issue> c) {
-                    updateDeleteIssueButtonState();
-                    updateBugDetails();
-                    updateSaveIssueButtonState();
+                    
+                    logger.fine("Table selection changed.");
+//                    updateDeleteIssueButtonState();
+//                    updateBugDetails();
+//                    updateSaveIssueButtonState();
                 }
             };
 

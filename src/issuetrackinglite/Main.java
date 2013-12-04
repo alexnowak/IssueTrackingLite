@@ -5,7 +5,9 @@
  */
 package issuetrackinglite;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -20,7 +22,12 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        logger.info("Starting JavaFX application.");
+        logger.info("Starting JavaFX application. Logging Level: " + logger.getLevel());
+        logger.info("Logger Name: " + logger.getName());
+        logger.info("Number of logging handlers: " + logger.getParent().getHandlers().length);
+        for (Handler h : logger.getParent().getHandlers()) {
+            logger.info(" - "+h.getClass().getName() + " - "+h.getLevel());
+        }
         logger.severe("SEVERE");
         logger.warning("WARNING");
         logger.info("INFO");
@@ -37,14 +44,16 @@ public class Main extends Application {
             primaryStage.setScene(scene);
             primaryStage.setTitle("Issue Tracking Lite Sample");
             primaryStage.show();
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "JavaFX Error", ex);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE,"JavaFX Error", ex);
+        } catch (RuntimeException re ) {
+            logger.severe("Dude!!");
         }
     }
 
     @Override
     public void stop() throws Exception {
-        logger.log(Level.INFO, "Stopping JavaFX application.");
+        logger.info("Stopping JavaFX application.");
     }
 
 }
