@@ -31,7 +31,7 @@ public class TrackingServiceStub implements TrackingService {
     // of issue IDs in the projects Map.
     ObservableMap<Integer, Project> projectsMap;
     ObservableMap<Integer, Issue> issuesMap;
-    ObservableList<String> projectNames;
+//    ObservableList<String> projectNames;
 
     AtomicInteger issueCounter = new AtomicInteger(0);
 
@@ -43,23 +43,21 @@ public class TrackingServiceStub implements TrackingService {
         
         // retrieve projects from db
         Database db=null;
-        try {
-            db = Database.getInstance();
-        } catch (Exception e) {
-            logger.severe("Caught something in TrackingServiceStub constructor....");
-        }
+        db = Database.getInstance();
         try (Statement s = db.getConnection().createStatement() ) {
             ResultSet rs = s.executeQuery("select * from Project");
-            logger.info("Number of projects: " + rs.getFetchSize());
+            int nProj=0;
             while (rs.next()) {
                 Integer projId = rs.getInt("Id");
                 Project proj = new Project(projId, rs.getString("Name"));
                 projectsMap.put(projId, proj);
+                logger.fine("\t["+ (nProj++) + "] Id" + proj.getId() + proj.getName());
             }
-  
+            logger.info("Number of projects in db: "+nProj);
+ 
         
     //        projectNames = FXCollections.<String>observableArrayList();
-     //       projectNames.addAll(projectsMap.keySet());
+    //        projectNames.addAll(projectsMap.keySet());
 
                 // The projectNames list is kept in sync with the project's map by observing
             // the projectsMap and modifying the projectNames list in consequence.
@@ -111,7 +109,6 @@ public class TrackingServiceStub implements TrackingService {
             issuesMap.addListener(issuesMapChangeListener);
 
             rs = s.executeQuery("select * from Issue");
-            logger.info("Number of issues: " + rs.getFetchSize());
             while (rs.next()) {
                 int id = rs.getInt("Id");
                 int projId = rs.getInt("projId");
@@ -141,7 +138,7 @@ public class TrackingServiceStub implements TrackingService {
 
     @Override
     public ObservableList<String> getProjectNames() {
-        return projectNames;
+        return null;
     }
 
     @Override

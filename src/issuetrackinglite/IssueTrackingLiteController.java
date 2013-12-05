@@ -31,6 +31,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.application.Platform;
 
 public class IssueTrackingLiteController {
 
@@ -98,7 +99,7 @@ public class IssueTrackingLiteController {
      * Initializes the controller class.
      */
     @FXML
-    void init() throws SQLException {
+    void initialize() {
         assert colName != null : "fx:id=\"colName\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert colStatus != null : "fx:id=\"colStatus\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
         assert colSynopsis != null : "fx:id=\"colSynopsis\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
@@ -113,10 +114,16 @@ public class IssueTrackingLiteController {
         assert table != null : "fx:id=\"table\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
 
         logger.info("initialize: url=" + location);
+        
+        try {
         configureButtons();
         configureDetails();
         configureTable();
         connectToService();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE,"FATAL ERROR: Exiting application. See exception below:",e);
+            Platform.exit();
+        }
         list.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         
         /**

@@ -71,9 +71,9 @@ public class Database {
                 initializeDatabase();
             } else {
                 // Error other than db not exists error occured.
-                logger.log(Level.SEVERE,"Dude, I am so outa here...: SQL State: "+e.getSQLState(),e);
+//                logger.log(Level.SEVERE,"Dude, I am so outa here...: SQL State: "+e.getSQLState(),e);
 //                throw new SQLException("Database connection error: " + e.getMessage() + "\nSee stacktrace above.");
-                throw new SQLDataException(e);
+                throw e;
             }
         } catch (Exception ex) {
             logger.log(Level.SEVERE,"Unable to connect to database. See exception below: ", ex);
@@ -142,7 +142,7 @@ public class Database {
             logger.fine("Creating table ISSUE ...");
             s.executeUpdate("create table Issue ("
                     + "Id INTEGER PRIMARY KEY, "
-                    + "ProjectId INTEGER, " // foreign key to project related to issue
+                    + "ProjId INTEGER, " // foreign key to project related to issue
                     + "Status INTEGER, "
                     + "Synopsis VARCHAR(1024), "
                     + "Description VARCHAR(32000) "  // TODO: this should be probably a blob or clob? max length is 32672
