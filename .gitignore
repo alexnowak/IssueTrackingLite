@@ -6,6 +6,7 @@
 *.class
 *.bak
 *.log
+*.lck
 
 # Package Files #
 *.jar
@@ -18,3 +19,4 @@
 
 
 TestExp.java
+*.lck

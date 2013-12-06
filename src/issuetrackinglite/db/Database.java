@@ -6,6 +6,7 @@
 
 package issuetrackinglite.db;
 
+import issuetrackinglite.model.Issue;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLDataException;
@@ -168,7 +169,7 @@ public class Database {
                             "insert into Issue "
                             + "values(" + nIssue + ", "
                             + i + ", "
-                            + "0, "
+                            + Issue.IssueStatus.NEW.ordinal() + ", "
                             + "'Synopsis " + j + "', "
                             + "'Description " + j + "'"
                             + ")");

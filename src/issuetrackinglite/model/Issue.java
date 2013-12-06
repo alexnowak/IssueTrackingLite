@@ -29,6 +29,16 @@ import javafx.beans.value.ObservableValue;
         private SimpleStringProperty description;
         private SimpleObjectProperty<IssueStatus> status;
 
+        /**
+         * Constructor with Issue properties.
+         * 
+         * @param id
+         * @param projId
+         * @param projName
+         * @param status
+         * @param synopsis
+         * @param description 
+         */
         public Issue(int id, int projId, String projName, IssueStatus status, String synopsis, String description) {
             this.projName = new SimpleStringProperty(projName);
             this.id = new SimpleIntegerProperty(id);

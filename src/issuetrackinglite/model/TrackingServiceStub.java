@@ -10,13 +10,11 @@ import issuetrackinglite.model.Issue.IssueStatus;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -24,7 +22,7 @@ import javafx.collections.MapChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 
-public class TrackingServiceStub implements TrackingService {
+public class TrackingServiceStub {
     static final Logger logger = Logger.getLogger(TrackingServiceStub.class.getName());
 
     // You add a project by adding an entry with an empty observable array list
@@ -48,8 +46,9 @@ public class TrackingServiceStub implements TrackingService {
             ResultSet rs = s.executeQuery("select * from Project");
             int nProj=0;
             while (rs.next()) {
-                Integer projId = rs.getInt("Id");
-                Project proj = new Project(projId, rs.getString("Name"));
+                int projId = rs.getInt("Id");
+                String projName = rs.getString("Name");
+                Project proj = new Project(projId, projName);
                 projectsMap.put(projId, proj);
                 logger.fine("\t["+ (nProj++) + "] Id" + proj.getId() + proj.getName());
             }
@@ -59,7 +58,7 @@ public class TrackingServiceStub implements TrackingService {
     //        projectNames = FXCollections.<String>observableArrayList();
     //        projectNames.addAll(projectsMap.keySet());
 
-                // The projectNames list is kept in sync with the project's map by observing
+            // The projectNames list is kept in sync with the project's map by observing
             // the projectsMap and modifying the projectNames list in consequence.
             MapChangeListener<Integer,Project> projectsMapChangeListener = new MapChangeListener<Integer,Project>() {
                 @Override
@@ -106,8 +105,6 @@ public class TrackingServiceStub implements TrackingService {
                 }
             };
             
-            issuesMap.addListener(issuesMapChangeListener);
-
             rs = s.executeQuery("select * from Issue");
             while (rs.next()) {
                 int id = rs.getInt("Id");
@@ -125,23 +122,26 @@ public class TrackingServiceStub implements TrackingService {
                 Issue issue = new Issue(id, projId, projectsMap.get(projId).getName(), IssueStatus.NEW,synopsis, description);
                 issuesMap.put(issue.getId(), issue);
             }
+            issuesMap.addListener(issuesMapChangeListener);
         }
         
         
     }
 
 
-    @Override
     public void deleteIssue(int issueId) {
         issuesMap.remove(issueId);
     }
 
-    @Override
     public ObservableList<String> getProjectNames() {
-        return null;
+        ArrayList<String> projNames = new ArrayList<String>();
+        
+        for ( Project p : projectsMap.values() )
+            projNames.add(p.getName());
+        
+        return FXCollections.observableArrayList(projNames);
     }
 
-    @Override
     public void saveIssue(String issueId, IssueStatus status,
             String synopsis, String description) {
         Issue issue = issuesMap.get(issueId);
@@ -151,8 +151,57 @@ public class TrackingServiceStub implements TrackingService {
     }
 
 
-    @Override
-    public ObservableList<String> getIssueIds(String projectName) {
-        return null;
+    public ObservableList<String> getIssueIds(String projectName) throws SQLException {
+        List<String> issues = new ArrayList<String>();
+        try (Statement s = Database.getInstance().getConnection().createStatement() ) {
+            ResultSet rs = s.executeQuery("select i.Id from Project p, Issue i where p.Name='"+projectName+"' and i.ProjId=p.Id");
+            while (rs.next()) {
+                issues.add("TT-"+rs.getInt("Id"));
+            }
     }
+        logger.info("Project \""+projectName+" has " + issues.size() + " issues.");
+        return FXCollections.observableList(issues);
+    }
+
+    public ObservableList<Issue> getIssues(String projName) throws SQLException {
+        List<Issue> issues = new ArrayList<Issue>();
+        int projId = getProjectId(projName);
+        try (Statement s = Database.getInstance().getConnection().createStatement() ) {
+            ResultSet rs = s.executeQuery("select * from Issue where ProjId="+projId);
+            while (rs.next()) {
+                //        public Issue(int id, int projId, String projName, IssueStatus status, String synopsis, String description) {
+ 
+                Issue issue = new Issue(
+                        rs.getInt("Id"),
+                        getProjectId(projName),
+                        projName,
+                        Issue.IssueStatus.values()[rs.getInt("Status")],
+                        rs.getString("Synopsis"),
+                        rs.getString("Synopsis"));
+                issues.add(issue);
+            }
+    }
+        logger.info("Project \""+projName+" has " + issues.size() + " issues.");
+        return FXCollections.observableList(issues);
+    }
+
+    private int getProjectId(String projName) throws SQLException {
+        int projId;
+        try (Statement s = Database.getInstance().getConnection().createStatement()) {
+            ResultSet rs = s.executeQuery("select Id from Project where Name='" + projName + "'");
+            if (!rs.next()) {
+                throw new SQLException("Project with name \"" + projName + "\" not found in database.");
+            }
+
+            projId = rs.getInt("Id");
+
+            if (rs.next()) {
+                throw new SQLException("Found more than one project with name \"" + projName + "\" in database.");
+            }
+        }
+
+        logger.info("Project \"" + projName + " has ID " + projId);
+        return projId;
+    }
+
 }
