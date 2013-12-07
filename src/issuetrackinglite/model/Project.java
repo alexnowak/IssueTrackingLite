@@ -10,9 +10,11 @@ package issuetrackinglite.model;
  *
  * @author Alex
  */
-public class Project {
+public class Project implements Comparable<Project> {
 
     public Project(int id, String name) {
+        if (name == null)
+            throw new NullPointerException("Person's name cannot be null.");
         this.id = id;
         this.name = name;
     }
@@ -35,7 +37,25 @@ public class Project {
         this.name = name;
     }
     
+    /**
+     * <p>String representation of a Project.</p>
+     * Note: toString() will be called by a JavaFX ListView to display the items
+     * in a list.
+     * 
+     * @return The project name as it will displayed in a ListView
+     */
+    @Override
     public String toString() {
-        return "Project: Id: "+ getId() + " Name: " + getName();
+        return getName();
+    }
+
+    /**
+     * Natural sort order is by project name
+     * @param p Project to compare to
+     * @return 0,1
+     */
+    @Override
+    public int compareTo(Project p) {
+        return getName().compareTo(p.getName());
     }
 }

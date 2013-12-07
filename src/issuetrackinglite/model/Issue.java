@@ -40,8 +40,8 @@ import javafx.beans.value.ObservableValue;
          * @param description 
          */
         public Issue(int id, int projId, String projName, IssueStatus status, String synopsis, String description) {
-            this.projName = new SimpleStringProperty(projName);
             this.id = new SimpleIntegerProperty(id);
+            this.projName = new SimpleStringProperty(projName);
             this.synopsis = new SimpleStringProperty(synopsis);
             this.description = new SimpleStringProperty(description);
             this.status = new SimpleObjectProperty<IssueStatus>(status); 
@@ -100,6 +100,6 @@ import javafx.beans.value.ObservableValue;
         }
         
         public String toString() {
-            return "Issue: ID"+getId()+" Status: "+getStatus()+" Synopsis: "+getSynopsis() + "\nDescription: " + getDescription();
+            return "ID"+getId()+" Status: "+getStatus()+" Synopsis: "+getSynopsis() + " Description: " + getDescription();
         }
     }
