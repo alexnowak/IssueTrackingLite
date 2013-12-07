@@ -4,11 +4,11 @@
 package issuetrackinglite;
 
 import issuetrackinglite.model.Issue;
+import issuetrackinglite.model.Project;
 import issuetrackinglite.model.TrackingServiceStub;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -48,7 +48,7 @@ public class IssueTrackingLiteController {
     @FXML
     Button saveIssue;
     @FXML
-    TableView<Issue> table = new TableView<Issue>();       // issue details table
+    TableView<Issue> table = new TableView<>();       // issue details table
     @FXML
     TableColumn<Issue, String> colName;   // Issue name
     @FXML
@@ -56,7 +56,7 @@ public class IssueTrackingLiteController {
     @FXML
     TableColumn<Issue, String> colSynopsis;       // issue synopsis
     @FXML
-    ListView<String> projList;  // project name projList
+    ListView<Project> projList;  // project name projList
     @FXML
     TextField synopsis;
     @FXML
@@ -71,13 +71,11 @@ public class IssueTrackingLiteController {
     private String displayedBugProject; // the name of the project of the bug displayed in the detailed section.
 
     // Observeable properties  -----------------------------------------------------
-    ObservableList<String> projectsView = FXCollections.observableArrayList();
-
+//    ObservableList<String> projectsView = FXCollections.observableArrayList();
     // An observable projList of project names obtained from the model.
     // This is a live projList, and we will react to its changes by removing
     // and adding project names to/from our projList widget.
-    private ObservableList<String> displayedProjectNames;
-
+//    private ObservableList<String> displayedProjectNames;
     // The projList of Issue IDs relevant to the selected project. Can be null
     // if no project is selected. This projList is obtained from the model.
     // This is a live projList, and we will react to its changes by removing
@@ -108,58 +106,41 @@ public class IssueTrackingLiteController {
         assert table != null : "fx:id=\"table\" was not injected: check your FXML file 'IssueTrackingLite.fxml'.";
 
         logger.info("initialize: url=" + location);
-  
+
+        configureButtons();
+        configureDetails();
+        configureTable();
         try {
-            configureButtons();
-            configureDetails();
-            configureTable();
             connectToService();
+            projList.setItems(model.getProjects());
+
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "FATAL ERROR: Exiting application. See exception below:", e);
             Platform.exit();
         }
+
         projList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         /**
-         * Listen to changes in the list selection, and updates the table widget
-         * and DeleteIssue and NewIssue buttons accordingly.
+         * Listen to changes in the project list selection, and updates the 
+         * issue table widget and DeleteIssue and NewIssue buttons accordingly.
          */
-        ChangeListener<String> projChangeListener = new ChangeListener<String>() {
+        ChangeListener<Project> projChangeListener = new ChangeListener<Project>() {
             @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                projectUnselected(oldValue);
+            public void changed(ObservableValue<? extends Project> observable, Project oldValue, Project newValue) {
+                logger.finest("Selected Project: " + newValue);
                 try {
-                projectSelected(newValue);
+                    updateIssueTable(newValue);
+                    
+                    newIssue.setDisable(false);
+
                 } catch (SQLException e) {
-                    logger.log(Level.SEVERE,"Database error: ", e);
+                    logger.log(Level.SEVERE, "Database error: ", e);
                 }
             }
         };
 
         projList.getSelectionModel().selectedItemProperty().addListener(projChangeListener);
-
-        // This listener will listen to changes in the displayedProjectNames projList,
-        // and update our projList widget in consequence.
-        ListChangeListener<String> projListChangeListener = new ListChangeListener<String>() {
-            @Override
-            public void onChanged(Change<? extends String> c) {
-                while (c.next()) {
-                    if (c.wasAdded() || c.wasReplaced()) {
-                        for (String p : c.getAddedSubList()) {
-                            projectsView.add(p);
-                        }
-                    }
-                    if (c.wasRemoved() || c.wasReplaced()) {
-                        for (String p : c.getRemoved()) {
-                            projectsView.remove(p);
-                        }
-                    }
-                }
-                FXCollections.sort(projectsView);
-            }
-        };
-        
-        displayedProjectNames.addListener(projListChangeListener);
     }
 
     /**
@@ -170,7 +151,7 @@ public class IssueTrackingLiteController {
     public void newIssueFired(ActionEvent event) {
         final String selectedProject = getSelectedProject();
         if (model != null && selectedProject != null) {
-            Issue issue = new Issue(1,2,"aaa",Issue.IssueStatus.NEW,"bla","bla");
+            Issue issue = new Issue(1, 2, "aaa", Issue.IssueStatus.NEW, "bla", "bla");
             // Select the newly created issue.
             table.getSelectionModel().clearSelection();
             table.getSelectionModel().select(issue);
@@ -183,19 +164,24 @@ public class IssueTrackingLiteController {
      * @param event the action event.
      */
     public void deleteIssueFired(ActionEvent event) {
-        final String selectedProject = getSelectedProject();
-        if (model != null && selectedProject != null && table != null) {
+        logger.fine("You pressed DELETE ISSUE");
             // We create a copy of the current selection: we can't delete
-            //    issue while looping over the live selection, since
-            //    deleting selected issues will modify the selection.
-            final List<?> selectedIssue = new ArrayList<Object>(table.getSelectionModel().getSelectedItems());
-            for (Object o : selectedIssue) {
-                if (o instanceof Issue) {
-                    model.deleteIssue(((Issue) o).getId());
-                }
+        //    issue while looping over the live selection, since
+        //    deleting selected issues will modify the selection.
+        final List<Issue> selectedIssues = new ArrayList<>(table.getSelectionModel().getSelectedItems());
+        table.getSelectionModel().clearSelection();
+        try {
+            for (Issue issue : selectedIssues) {
+                // Delete isseu from table data
+                table.getItems().remove(issue);
+                // Delete issue from data base
+                model.deleteIssue(issue);
+
             }
-            table.getSelectionModel().clearSelection();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error deleting issue from database.", e);
         }
+        details.setVisible(false);
     }
 
     /**
@@ -205,77 +191,51 @@ public class IssueTrackingLiteController {
      */
     public void saveIssueFired(ActionEvent event) {
         logger.severe("TODO: saveIssueFired called");
-        
-        /********
-        final Issue ref = getSelectedIssue();
-        DetailsData data = new DetailsData();
-        Issue edited = new Issue(444,2,data.getProjectName(),data.getStatus(),data.getSynopsis(),data.getDescription());
-        SaveState saveState = computeSaveState(edited, ref);
-        if (saveState == SaveState.UNSAVED) {
-            model.saveIssue(ref.getId(), edited.getStatus(),
-                    edited.getSynopsis(), edited.getDescription());
-        }
-        // We refresh the content of the table because synopsis and/or description
-        // are likely to have been modified by the user.
-        int selectedRowIndex = table.getSelectionModel().getSelectedIndex();
-        table.getItems().clear();
-        displayedIssues = model.getIssueIds(getSelectedProject());
-        for (String id : displayedIssues) {
-            final Issue issue = model.getIssue(id);
-            table.getItems().add(issue);
-        }
-        table.getSelectionModel().select(selectedRowIndex);
 
-        updateSaveIssueButtonState();
-        ************/ 
+        /**
+         * ******
+         * final Issue ref = getSelectedIssue(); DetailsData data = new
+         * DetailsData(); Issue edited = new
+         * Issue(444,2,data.getProjectName(),data.getStatus(),data.getSynopsis(),data.getDescription());
+         * SaveState saveState = computeSaveState(edited, ref); if (saveState ==
+         * SaveState.UNSAVED) { model.saveIssue(ref.getId(), edited.getStatus(),
+         * edited.getSynopsis(), edited.getDescription()); } // We refresh the
+         * content of the table because synopsis and/or description // are
+         * likely to have been modified by the user. int selectedRowIndex =
+         * table.getSelectionModel().getSelectedIndex();
+         * table.getItems().clear(); displayedIssues =
+         * model.getIssueIds(getSelectedProject()); for (String id :
+         * displayedIssues) { final Issue issue = model.getIssue(id);
+         * table.getItems().add(issue); }
+         * table.getSelectionModel().select(selectedRowIndex);
+         *
+         * updateSaveIssueButtonState();
+        ***********
+         */
     }
 
     // Connect to the model, get the project's names projList, and listen to
     // its changes. Initializes the projList widget with retrieved project names.
     private void connectToService() throws SQLException {
-        if (model == null) {
-            model = new TrackingServiceStub();
-            displayedProjectNames = model.getProjectNames();
-        }
-        projectsView.clear();
-        List<String> sortedProjects = new ArrayList<String>(displayedProjectNames);
-        Collections.sort(sortedProjects);
-        projectsView.addAll(sortedProjects);
-        projList.setItems(projectsView);
+        model = new TrackingServiceStub();
     }
-
 
     private static String nonNull(String s) {
         return s == null ? "" : s;
     }
 
-    private void updateBugDetails() {
-        final Issue selectedIssue = getSelectedIssue();
-        if (details != null && selectedIssue != null) {
-            if (displayedIssueLabel != null) {
-                displayedBugId = selectedIssue.getId();
-                displayedBugProject = selectedIssue.getProjectName();
-                displayedIssueLabel.setText(displayedBugId + " / " + displayedBugProject);
-            }
-            if (synopsis != null) {
-                synopsis.setText(nonNull(selectedIssue.getSynopsis()));
-            }
-            if (statusValue != null) {
-                statusValue.setText(selectedIssue.getStatus().toString());
-            }
-            if (descriptionValue != null) {
-                descriptionValue.selectAll();
-                descriptionValue.cut();
-                descriptionValue.setText(selectedIssue.getDescription());
-            }
-        } else {
-            displayedIssueLabel.setText("");
-            displayedBugId = -1;
-            displayedBugProject = null;
-        }
-        if (details != null) {
-            details.setVisible(selectedIssue != null);
-        }
+    private void updateIssueDetails(Issue issue) {
+        if (issue == null)
+            return;
+        displayedBugId = issue.getId();
+        displayedBugProject = issue.getProjectName();
+        displayedIssueLabel.setText("ID" + displayedBugId + " / " + displayedBugProject);
+        synopsis.setText(nonNull(issue.getSynopsis()));
+        statusValue.setText(issue.getStatus().toString());
+        descriptionValue.selectAll();
+        descriptionValue.cut();
+        descriptionValue.setText(issue.getDescription());
+        details.setVisible(true);
     }
 
     private boolean isVoid(Object o) {
@@ -298,6 +258,7 @@ public class IssueTrackingLiteController {
     }
 
     private static enum SaveState {
+
         INVALID, UNSAVED, UNCHANGED
     }
 
@@ -332,16 +293,18 @@ public class IssueTrackingLiteController {
 
     private void updateDeleteIssueButtonState() {
         final boolean nothingSelected = table.getSelectionModel().getSelectedItems().isEmpty();
+        logger.finest("nothingSelected: "+nothingSelected);
         deleteIssue.setDisable(nothingSelected);
     }
 
     private void updateSaveIssueButtonState() {
         final boolean nothingSelected = table.getSelectionModel().getSelectedItems().isEmpty();
+        logger.finest("nothingSelected: "+nothingSelected);
         if (nothingSelected) {
             saveIssue.setDisable(true);
             return;
         }
-        
+
         logger.severe("TODO: computeSaveState");
 
         boolean disable = false; //computeSaveState(new DetailsData(), getSelectedIssue()) != SaveState.UNSAVED;
@@ -354,39 +317,49 @@ public class IssueTrackingLiteController {
      *
      */
     public String getSelectedProject() {
-        final ObservableList<String> selectedProjectItem = projList.getSelectionModel().getSelectedItems();
-        final String selectedProject = selectedProjectItem.get(0);
-        return selectedProject;
+        final ObservableList<Project> selectedProjectItem = projList.getSelectionModel().getSelectedItems();
+        final Project selectedProject = selectedProjectItem.get(0);
+        return selectedProject.getName();
     }
 
     public Issue getSelectedIssue() {
         List<Issue> selectedIssues = table.getSelectionModel().getSelectedItems();
         if (selectedIssues.size() == 1) {
             final Issue selectedIssue = selectedIssues.get(0);
-            logger.fine("Selected issue: "+selectedIssue);
+            logger.fine("Selected issue: " + selectedIssue);
             return selectedIssue;
         }
         // TODO: Handle this case.... can it occur, or can we limit selection somehow...?
-        logger.warning("You have selected "+selectedIssues.size()+" issues. You should select only one!");
+        logger.warning("You have selected " + selectedIssues.size() + " issues. You should select only one!");
         return null;
     }
 
-    // Called when a project is unselected.
-    private void projectUnselected(String oldProjectName) {
-        logger.finest("projectUnselected called! oldProjectName="+oldProjectName);
-    }
 
-    private void updateTable(String projName) throws SQLException {
-        logger.fine("Updating issue table for selected project \"" + projName + "\"");
-        ObservableList<Issue> issues = model.getIssues(projName);
+    ListChangeListener<Issue> issueTableChangeListener = null;
+    private void updateIssueTable(Project proj) throws SQLException {
+        logger.fine("Updating issue table for selected project \"" + proj + "\"");
+
+
+
+        ObservableList<Issue> issues = model.getIssues(proj);
+        // avoid listener to fire when removing data model
+        if (issueTableChangeListener!=null)
+            table.getItems().removeListener(issueTableChangeListener);
+        
         table.setItems(issues);
 
-    // This listener will listen to changes in the displayedIssues projList,
+        // This listener will listen to changes in the displayedIssues projList,
         // and update our table widget in consequence.
-        ListChangeListener<Issue> projectIssuesListener = new ListChangeListener<Issue>() {
+        ListChangeListener<Issue> issueTableChangeListener = new ListChangeListener<Issue>() {
             @Override
             public void onChanged(Change<? extends Issue> c) {
+                if (c == null) {
+                    logger.warning("c == null!");
+                    return;
+                }
                 while (c.next()) {
+                    logger.finer("Change to IssueTable dected: wasAdded=" + c.wasAdded() + " wasReplaced=" + c.wasReplaced()
+                            + " wasUpdated=" + c.wasUpdated() + " wasRemoved=" + c.wasRemoved() + " wasPermuted=" + c.wasPermutated());
                     if (c.wasAdded() || c.wasReplaced()) {
                         for (Issue i : c.getAddedSubList()) {
                             logger.fine("Issue " + i + " has been added or replaced.");
@@ -420,30 +393,7 @@ public class IssueTrackingLiteController {
             }
         };
 
-        issues.addListener(projectIssuesListener);
-
-    }
-    
-    
-    // Called when a project is selected.
-    private void projectSelected(String newProjectName) throws SQLException {
-        logger.finest("projectSelected called! newProjectName=" + newProjectName);
-
-        if (newProjectName == null) {
-            // nothing to do here!
-            return;
-        }
-        table.getItems().clear();
-        
-        updateTable(newProjectName);
-      //  displayedIssues = model.getIssueIds(newProjectName);
-
-        // logger.fine("Project \"" + newProjectName + "\" has " + displayedIssues.size() + " issue(s).");
-
-        newIssue.setDisable(false);
-
-        updateDeleteIssueButtonState();
-        updateSaveIssueButtonState();
+        issues.addListener(issueTableChangeListener);
 
     }
 
@@ -458,9 +408,10 @@ public class IssueTrackingLiteController {
 
     /**
      * Configure the table widget: set up its column, and register the selection
- changed projListener.
+     * changed projListener.
      */
     private void configureTable() {
+        // Setting Data Properties to Columns
         colName.setCellValueFactory(new PropertyValueFactory<Issue, String>("id"));
         colSynopsis.setCellValueFactory(new PropertyValueFactory<Issue, String>("synopsis"));
         colStatus.setCellValueFactory(new PropertyValueFactory<Issue, Issue.IssueStatus>("status"));
@@ -484,22 +435,20 @@ public class IssueTrackingLiteController {
         table.setItems(tableContent);
         assert table.getItems() == tableContent;
 
-        ObservableList<Issue> tableSelection = table.getSelectionModel().getSelectedItems();
-
-        // This listener listen to changes in the table widget selection and
-        // update the DeleteIssue button state accordingly.
-        ListChangeListener<Issue> tableSelectionChanged = new ListChangeListener<Issue>() {
-                @Override
-                public void onChanged(Change<? extends Issue> c) {
-                    
-                    logger.fine("Table selection changed.");
-//                    updateDeleteIssueButtonState();
+        table.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Issue>() {
+            @Override
+            public void changed(ObservableValue<? extends Issue> ov, Issue oldValue, Issue newValue) {
+                logger.fine("Selected Issue: OLD=" + oldValue + " NEW=" + newValue);
+                if (newValue == null)
+                    return;
+                // Display issue details in the view below the table
+                updateIssueDetails(newValue);
+                updateDeleteIssueButtonState();
 //                    updateBugDetails();
 //                    updateSaveIssueButtonState();
-                }
-            };
+            }
+        });
 
-        tableSelection.addListener(tableSelectionChanged);
     }
 
     private void configureDetails() {
@@ -508,8 +457,8 @@ public class IssueTrackingLiteController {
         details.addEventFilter(EventType.ROOT, new EventHandler<Event>() {
             @Override
             public void handle(Event event) {
-                if (event.getEventType() == MouseEvent.MOUSE_RELEASED || 
-                    event.getEventType() == KeyEvent.KEY_RELEASED) {
+                if (event.getEventType() == MouseEvent.MOUSE_RELEASED
+                        || event.getEventType() == KeyEvent.KEY_RELEASED) {
                     updateSaveIssueButtonState();
                 }
             }
