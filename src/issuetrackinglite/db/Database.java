@@ -137,16 +137,17 @@ public class Database {
         try (Statement s = conn.createStatement()) {
             logger.fine("Creating table PROJECT ...");
             s.executeUpdate("create table Project("
-                    + "Id INTEGER PRIMARY KEY, "
+                    + "Id INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 0, INCREMENT BY 1), "
                     + "Name VARCHAR(512) "
                     + ")");
             logger.fine("Creating table ISSUE ...");
             s.executeUpdate("create table Issue ("
-                    + "Id INTEGER PRIMARY KEY, "
+                    + "Id INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 0, INCREMENT BY 1), "
                     + "ProjId INTEGER, " // foreign key to project related to issue
                     + "Status INTEGER, "
                     + "Synopsis VARCHAR(1024), "
-                    + "Description VARCHAR(32000) "  // TODO: this should be probably a blob or clob? max length is 32672
+                    + "Description VARCHAR(32000), "  // TODO: this should be probably a blob or clob? max length is 32672
+                    + "CONSTRAINT TableRefs FOREIGN KEY (ProjId) REFERENCES Project(Id)"
                     + ")");
         }
         logger.info("DB tables loaded successfully.");
@@ -159,16 +160,15 @@ public class Database {
         try (Statement s = conn.createStatement()) {
             logger.fine("Loading PROJECT data ...");
             int nIssue = 0;
-            for (int i = 1; i < 10; i++) {
+            for (int i = 0; i < 10; i++) {
                 s.executeUpdate(
-                        "insert into Project values(" + i + ", 'Project" + i + "')");
+                        "insert into Project values(DEFAULT,'Project P" + (i+1) + "')");
 
                 logger.fine("Loading ISSUE data for Project ID" + i + "...");
                 for (int j = 0; j < 50; j++) {
                     s.executeUpdate(
-                            "insert into Issue "
-                            + "values(" + nIssue + ", "
-                            + i + ", "
+                            "insert into Issue values("
+                            + "DEFAULT, "+ i + ", "
                             + Issue.IssueStatus.NEW.ordinal() + ", "
                             + "'Synopsis " + j + "', "
                             + "'Description " + j + "'"
