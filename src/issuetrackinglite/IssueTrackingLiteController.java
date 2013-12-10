@@ -149,13 +149,23 @@ public class IssueTrackingLiteController {
      * @param event the action event.
      */
     public void newIssueFired(ActionEvent event) {
-        final String selectedProject = getSelectedProject();
-        if (model != null && selectedProject != null) {
-            Issue issue = new Issue(1, 2, "aaa", Issue.IssueStatus.NEW, "bla", "bla");
-            // Select the newly created issue.
-            table.getSelectionModel().clearSelection();
-            table.getSelectionModel().select(issue);
+        final Project proj = getSelectedProject();
+        if (proj == null) {
+            logger.warning("You found a bug! newIssueFired called but no project selected!");
+            return;
         }
+
+        Issue issue = new Issue(-1, proj.getId(), Issue.IssueStatus.NEW, "Enter Synopsis", "Enter Description");
+        // Select the newly created issue.
+        try {
+            int newIssueId = model.saveNewIssue(issue);
+            issue.setId(newIssueId);
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Database Error:", ex);
+        }
+        table.getItems().add(issue);
+        table.getSelectionModel().clearSelection();
+        table.getSelectionModel().select(issue);
     }
 
     /**
@@ -192,26 +202,21 @@ public class IssueTrackingLiteController {
     public void saveIssueFired(ActionEvent event) {
         logger.severe("TODO: saveIssueFired called");
 
-        /**
-         * ******
-         * final Issue ref = getSelectedIssue(); DetailsData data = new
-         * DetailsData(); Issue edited = new
-         * Issue(444,2,data.getProjectName(),data.getStatus(),data.getSynopsis(),data.getDescription());
-         * SaveState saveState = computeSaveState(edited, ref); if (saveState ==
-         * SaveState.UNSAVED) { model.saveIssue(ref.getId(), edited.getStatus(),
-         * edited.getSynopsis(), edited.getDescription()); } // We refresh the
-         * content of the table because synopsis and/or description // are
-         * likely to have been modified by the user. int selectedRowIndex =
-         * table.getSelectionModel().getSelectedIndex();
-         * table.getItems().clear(); displayedIssues =
-         * model.getIssueIds(getSelectedProject()); for (String id :
-         * displayedIssues) { final Issue issue = model.getIssue(id);
-         * table.getItems().add(issue); }
-         * table.getSelectionModel().select(selectedRowIndex);
-         *
-         * updateSaveIssueButtonState();
-        ***********
-         */
+        Issue issue = getSelectedIssue();
+        // this should not happen, but hey...
+        if (issue == null) 
+            return;
+
+        try {
+            // update selected issue with values from details view
+            issue.setDescription(descriptionValue.getText());
+            issue.setSynopsis(synopsis.getText());
+            model.updateIssue(issue);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Unable to save issue: " + issue, e);
+        }
+
+        updateSaveIssueButtonState();
     }
 
     // Connect to the model, get the project's names projList, and listen to
@@ -224,11 +229,11 @@ public class IssueTrackingLiteController {
         return s == null ? "" : s;
     }
 
-    private void updateIssueDetails(Issue issue) {
+    private void updateIssueDetails(Issue issue) throws SQLException {
         if (issue == null)
             return;
         displayedBugId = issue.getId();
-        displayedBugProject = issue.getProjectName();
+        displayedBugProject = model.getProjectName(issue.getProjId());
         displayedIssueLabel.setText("ID" + displayedBugId + " / " + displayedBugProject);
         synopsis.setText(nonNull(issue.getSynopsis()));
         statusValue.setText(issue.getStatus().toString());
@@ -262,33 +267,15 @@ public class IssueTrackingLiteController {
         INVALID, UNSAVED, UNCHANGED
     }
 
-    private SaveState computeSaveState(Issue edited, Issue issue) {
-        try {
-            // These fields are not editable - so if they differ they are invalid
-            // and we cannot save.
-            if (!equal(edited.getId(), issue.getId())) {
-                return SaveState.INVALID;
-            }
-            if (!equal(edited.getProjectName(), issue.getProjectName())) {
-                return SaveState.INVALID;
-            }
-
-            // If these fields differ, the issue needs saving.
-            if (!equal(edited.getStatus(), issue.getStatus())) {
-                return SaveState.UNSAVED;
-            }
-            if (!equal(edited.getSynopsis(), issue.getSynopsis())) {
-                return SaveState.UNSAVED;
-            }
-            if (!equal(edited.getDescription(), issue.getDescription())) {
-                return SaveState.UNSAVED;
-            }
-        } catch (Exception x) {
-            // If there's an exception, some fields are invalid.
-            return SaveState.INVALID;
-        }
-        // No field is invalid, no field needs saving.
-        return SaveState.UNCHANGED;
+    private boolean detailsChanged(Issue edited) {
+        // If these fields differ, the issue needs saving.
+        boolean synopsisChanged = synopsis.getText().compareTo(edited.getSynopsis()) != 0;
+        logger.fine("Synopsis changed? " + synopsisChanged);
+        if (synopsisChanged)
+            return true;
+        boolean descriptionChanged = descriptionValue.getText().compareTo(edited.getDescription()) != 0;
+        logger.fine("Description changed? " + descriptionChanged);
+        return descriptionChanged;
     }
 
     private void updateDeleteIssueButtonState() {
@@ -305,21 +292,21 @@ public class IssueTrackingLiteController {
             return;
         }
 
-        logger.severe("TODO: computeSaveState");
-
-        boolean disable = false; //computeSaveState(new DetailsData(), getSelectedIssue()) != SaveState.UNSAVED;
-        saveIssue.setDisable(disable);
+        boolean changed = detailsChanged(getSelectedIssue());
+        saveIssue.setDisable(!changed);
     }
 
     /**
      * Return the name of the project currently selected, or null if no project
      * is currently selected.
+     * 
+     * @return Issue selected in issue table.
      *
      */
-    public String getSelectedProject() {
+    public Project getSelectedProject() {
         final ObservableList<Project> selectedProjectItem = projList.getSelectionModel().getSelectedItems();
         final Project selectedProject = selectedProjectItem.get(0);
-        return selectedProject.getName();
+        return selectedProject;
     }
 
     public Issue getSelectedIssue() {
@@ -329,7 +316,7 @@ public class IssueTrackingLiteController {
             logger.fine("Selected issue: " + selectedIssue);
             return selectedIssue;
         }
-        // TODO: Handle this case.... can it occur, or can we limit selection somehow...?
+        // This should not happen.  If save is pressed, an issue should be selected.
         logger.warning("You have selected " + selectedIssues.size() + " issues. You should select only one!");
         return null;
     }
@@ -393,7 +380,7 @@ public class IssueTrackingLiteController {
             }
         };
 
-        issues.addListener(issueTableChangeListener);
+//        issues.addListener(issueTableChangeListener);
 
     }
 
@@ -442,7 +429,11 @@ public class IssueTrackingLiteController {
                 if (newValue == null)
                     return;
                 // Display issue details in the view below the table
+                try {
                 updateIssueDetails(newValue);
+                } catch (SQLException e ) {
+                    logger.log(Level.SEVERE,"Database error for issue: " + newValue,e);
+                }
                 updateDeleteIssueButtonState();
 //                    updateBugDetails();
 //                    updateSaveIssueButtonState();
@@ -459,6 +450,7 @@ public class IssueTrackingLiteController {
             public void handle(Event event) {
                 if (event.getEventType() == MouseEvent.MOUSE_RELEASED
                         || event.getEventType() == KeyEvent.KEY_RELEASED) {
+                    logger.info("Details event: "+event.getEventType() + " Event: "+event);
                     updateSaveIssueButtonState();
                 }
             }
