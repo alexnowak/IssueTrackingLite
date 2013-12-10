@@ -11,14 +11,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLDataException;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientConnectionException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * Database routines. The DB connection is a singleton.
+ * 
  * @author Alex
  */
 public class Database {
@@ -28,10 +28,8 @@ public class Database {
     static final String DB_NAME = "IssueTrackingLite";
     static final int DB_PORT = 1527;
     static final String DB_HOST = "localhost";
-
-    
+   
     private Connection conn=null;
-    
     private static Database instance=null;  // The singleton instance
     
     /**
@@ -47,7 +45,6 @@ public class Database {
         Properties p = new Properties();
         p.setProperty("user", "admin");
         p.setProperty("password", "geheim123");
-    //    p.setProperty("create", "true");
         
         logger.info("Connection URL: "+connectionUrl);
         
@@ -72,8 +69,6 @@ public class Database {
                 initializeDatabase();
             } else {
                 // Error other than db not exists error occured.
-//                logger.log(Level.SEVERE,"Dude, I am so outa here...: SQL State: "+e.getSQLState(),e);
-//                throw new SQLException("Database connection error: " + e.getMessage() + "\nSee stacktrace above.");
                 throw e;
             }
         } catch (Exception ex) {
@@ -121,7 +116,7 @@ public class Database {
      *  - Id
      *  - ProjectId
      *  - Description
-     *  - 
+     *  - Synopsis
      */
     private void initializeDatabase() throws SQLException {
         loadSchema();
@@ -155,7 +150,6 @@ public class Database {
 
     private void loadData() throws SQLException {
         logger.info("Loading db data ...");
-//                for (String s : newList("Project1", "Project2", "Project3", "Project4")) {
 
         try (Statement s = conn.createStatement()) {
             logger.fine("Loading PROJECT data ...");
@@ -181,28 +175,3 @@ public class Database {
     }
 
 }
-//
-//        ts = createIssueFor("Project1");
-//        ts.setSynopsis("We rode in sorrow, with strong hounds three");
-//        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-//        ts = createIssueFor("Project1");
-//        ts.setSynopsis("Bran, Sgeolan, and Lomair");
-//        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-//        ts = createIssueFor("Project2");
-//        ts.setSynopsis("On a morning misty and mild and fair");
-//        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-//        ts = createIssueFor("Project4");
-//        ts.setSynopsis("The mist-drops hung on the fragrant trees");
-//        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-//        ts = createIssueFor("Project3");
-//        ts.setSynopsis("And in the blossoms hung the bees");
-//        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-//        ts = createIssueFor("Project2");
-//        ts.setSynopsis("We rode in sadness above Lough Lean");
-//        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-//        ts = createIssueFor("Project1");
-//        ts.setSynopsis("For our best were dead on Gavra's green");
-//        ts.setDescription("From \"The Wanderings Of Oisin\".\nW. B. Yeats.");
-//        ts = createIssueFor("Project4");
-//        ts.setSynopsis("The Wanderings of Oisin");
-//        ts.setDescription("William Butler Yeats.");
