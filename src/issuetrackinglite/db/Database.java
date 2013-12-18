@@ -55,9 +55,10 @@ public class Database {
         try {
             conn = DriverManager.getConnection(connectionUrl,p);
         } catch (SQLException e ) {
-            // This is kind of a dirty hack sql. code 080004 can have a few other 
+            // This is kind of a dirty hack. Sql code 080004 can have a few other 
             // causes other than missing database name....
             // However, the error msg contains "[...]database <name> not found[...]"
+            // This has been tested with JavaDB ONLY
             if (e.getSQLState().equals("08004") && e.getMessage().contains("not found")) {
                 logger.warning("Database "+dbName+" does not exist.");
                 
@@ -135,6 +136,7 @@ public class Database {
                     + "Id INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 0, INCREMENT BY 1), "
                     + "Name VARCHAR(512) UNIQUE"
                     + ")");
+            
             logger.fine("Creating table ISSUE ...");
             s.executeUpdate("create table Issue ("
                     + "Id INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 0, INCREMENT BY 1), "
