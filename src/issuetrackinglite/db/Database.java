@@ -44,7 +44,7 @@ public class Database {
         String connectionUrl = "jdbc:derby://"+dbHost+":"+dbPort+"/"+dbName;
         Properties p = new Properties();
         p.setProperty("user", "admin");
-        p.setProperty("password", "geheim123");
+        p.setProperty("password", "alex");
         
         logger.info("Connection URL: "+connectionUrl);
         
@@ -133,7 +133,7 @@ public class Database {
             logger.fine("Creating table PROJECT ...");
             s.executeUpdate("create table Project("
                     + "Id INTEGER NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 0, INCREMENT BY 1), "
-                    + "Name VARCHAR(512) "
+                    + "Name VARCHAR(512) UNIQUE"
                     + ")");
             logger.fine("Creating table ISSUE ...");
             s.executeUpdate("create table Issue ("

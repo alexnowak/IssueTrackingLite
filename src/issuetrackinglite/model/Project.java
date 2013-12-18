@@ -6,26 +6,42 @@
 
 package issuetrackinglite.model;
 
+import java.util.logging.Logger;
+import javafx.scene.control.ListCell;
+
 /**
  *
  * @author Alex
  */
-public class Project implements Comparable<Project> {
+public class Project extends ListCell<String> implements Comparable<Project> {
+    static final Logger logger = Logger.getLogger(Project.class.getName());
 
-    public Project(int id, String name) {
-        if (name == null)
-            throw new NullPointerException("Person's name cannot be null.");
-        this.id = id;
-        this.name = name;
-    }
     private int id;
     private String name;
 
-    public int getId() {
+    public Project(String name) {
+        this.id = -1;  // ID not set
+        this.name = name;
+    }
+
+    @Override
+    public void updateItem(String item, boolean empty) {
+        logger.info("Item=" + item + " empty=" + empty);
+    }
+    
+    public Project(int id, String name) {
+        if (name == null) {
+            throw new NullPointerException("Person's name cannot be null.");
+        }
+        this.id = id;
+        this.name = name;
+    }
+
+    public int getProjId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setProjId(int id) {
         this.id = id;
     }
 

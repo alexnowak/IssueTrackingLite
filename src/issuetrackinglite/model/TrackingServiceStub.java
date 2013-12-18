@@ -35,7 +35,7 @@ public class TrackingServiceStub {
             while (rs.next()) {
                 Project proj = new Project(rs.getInt("Id"), rs.getString("Name"));
                 projs.add(proj);
-                logger.fine("\t["+ (nProj++) + "] Id" + proj.getId() + " - "+proj.getName());
+                logger.fine("\t["+ (nProj++) + "] Id" + proj.getProjId() + " - "+proj.getName());
             }
             logger.info("Number of projects in db: "+nProj);
         }
@@ -47,19 +47,19 @@ public class TrackingServiceStub {
     public ObservableList<Issue> getIssues(Project proj) throws SQLException {
         List<Issue> issues = new ArrayList<>();
         try (Statement s = Database.getInstance().getConnection().createStatement() ) {
-            ResultSet rs = s.executeQuery("select * from Issue where ProjId="+proj.getId());
+            ResultSet rs = s.executeQuery("select * from Issue where ProjId="+proj.getProjId());
             while (rs.next()) {
                 //        public Issue(int id, int projId, String projName, IssueStatus status, String synopsis, String description) {
                  Issue issue = new Issue(
                         rs.getInt("Id"),
-                        proj.getId(),
+                        proj.getProjId(),
                         Issue.IssueStatus.values()[rs.getInt("Status")],
                         rs.getString("Synopsis"),
                         rs.getString("Description"));
                 issues.add(issue);
             }
     }
-        logger.info("Project ID"+proj.getId()+" \"" + proj.getName() + "\" has " + issues.size() + " issues.");
+        logger.info("Project ID"+proj.getProjId()+" \"" + proj.getName() + "\" has " + issues.size() + " issues.");
         return FXCollections.observableList(issues);
     }
 
@@ -125,7 +125,7 @@ public class TrackingServiceStub {
                     + ")" );
             // get id of the saved issue
             int newId = getLastProjectId();
-            proj.setId(newId);
+            proj.setProjId(newId);
            logger.info("New projet saved successfully (SQLCode="+result+") Project: "+proj);
            return newId;
         }

@@ -24,7 +24,7 @@ import javafx.beans.value.ObservableValue;
             NEW, OPENED, FIXED, CLOSED
         }
         private SimpleIntegerProperty id;
-        private SimpleStringProperty projName;
+        private int projId;
         private SimpleStringProperty synopsis;
         private SimpleStringProperty description;
         private SimpleObjectProperty<IssueStatus> status;
@@ -34,14 +34,13 @@ import javafx.beans.value.ObservableValue;
          * 
          * @param id
          * @param projId
-         * @param projName
          * @param status
          * @param synopsis
          * @param description 
          */
-        public Issue(int id, int projId, String projName, IssueStatus status, String synopsis, String description) {
+        public Issue(int id, int projId, IssueStatus status, String synopsis, String description) {
             this.id = new SimpleIntegerProperty(id);
-            this.projName = new SimpleStringProperty(projName);
+            this.projId = projId;
             this.synopsis = new SimpleStringProperty(synopsis);
             this.description = new SimpleStringProperty(description);
             this.status = new SimpleObjectProperty<IssueStatus>(status); 
@@ -55,8 +54,16 @@ import javafx.beans.value.ObservableValue;
             return id.get();
         }
 
-        public String getProjectName() {
-            return projName.get();
+        public void setId(int id) {
+            this.id.set(id);
+        }
+        
+        public int getProjId() {
+            return projId;
+        }
+
+        public void setProjId(int projId) {
+            this.projId = projId;
         }
 
         public String getSynopsis() {
@@ -81,10 +88,6 @@ import javafx.beans.value.ObservableValue;
 
         public ObservableIntegerValue idProperty() {
             return id;
-        }
-
-        public ObservableValue<String> projectNameProperty() {
-            return projName;
         }
 
         public ObservableValue<IssueStatus> statusProperty() {
