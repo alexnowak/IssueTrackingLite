@@ -28,7 +28,7 @@ public class Main extends Application {
         for (Handler h : logger.getParent().getHandlers()) {
             logger.info(" - "+h.getClass().getName() + " - "+h.getLevel());
         }
-        logger.severe("SEVERE");
+        logger.severe("--SEVERE");
         logger.warning("WARNING");
         logger.info("INFO");
         logger.config("CONFIG");
@@ -47,7 +47,7 @@ public class Main extends Application {
         } catch (IOException ex) {
             logger.log(Level.SEVERE,"JavaFX Error", ex);
         } catch (RuntimeException re ) {
-            logger.severe("Dude!!");
+            logger.log(Level.SEVERE,"Dude!!",re);
         }
     }
 

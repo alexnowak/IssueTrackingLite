@@ -33,6 +33,7 @@ import javafx.application.Platform;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.util.Callback;
 import dialogs.FXOptionPane;
+import java.sql.SQLIntegrityConstraintViolationException;
 
 
 public class IssueTrackingLiteController {
@@ -171,6 +172,9 @@ public class IssueTrackingLiteController {
         Project proj = new Project("New Project");
         try {
             int id = model.saveNewProject(proj);
+        } catch (SQLIntegrityConstraintViolationException e) {
+            logger.log(Level.SEVERE, "Project with same name already exists",e);
+            return;
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Database error while saving project: "+proj, ex);
             

@@ -122,7 +122,6 @@ public class Database {
     private void initializeDatabase() throws SQLException {
         loadSchema();
         loadData();
-       
     }
 
     private void loadSchema() throws SQLException {
