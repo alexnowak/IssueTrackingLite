@@ -24,6 +24,11 @@ public class Project extends ListCell<String> implements Comparable<Project> {
         this.name = name;
     }
 
+    public Project(String name, int id) {
+        this.id = id;
+        this.name = name;
+    }
+
     @Override
     public void updateItem(String item, boolean empty) {
         logger.info("Item=" + item + " empty=" + empty);

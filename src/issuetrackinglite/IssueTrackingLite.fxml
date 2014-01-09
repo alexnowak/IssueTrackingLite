@@ -10,11 +10,28 @@
 <?import javafx.scene.paint.*?>
 <?import javafx.scene.shape.*?>
 
-<AnchorPane id="AnchorPane" depthTest="INHERIT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="531.0" prefWidth="899.9999000000025" styleClass="theme" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="issuetrackinglite.IssueTrackingLiteController">
+<AnchorPane id="AnchorPane" depthTest="INHERIT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="530.0" prefWidth="899.9999000000025" styleClass="theme" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="issuetrackinglite.IssueTrackingLiteController">
   <children>
-    <GridPane id="GridPane" prefHeight="-1.0" prefWidth="900.0" AnchorPane.bottomAnchor="-8.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="69.0">
+    <HBox id="HBox" alignment="CENTER" fillHeight="false" layoutY="73.0" maxHeight="1.7976931348623157E308" minHeight="-1.0" prefHeight="47.0" prefWidth="437.0" spacing="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="463.0">
       <children>
-        <SplitPane id="splitPaneVertical1" dividerPositions="0.49882903981264637" focusTraversable="true" orientation="VERTICAL" prefHeight="425.0" prefWidth="453.0000999999975" GridPane.columnIndex="1" GridPane.rowIndex="1">
+        <Button fx:id="newProj" mnemonicParsing="false" onAction="#newProjFired" text="New" />
+        <Button fx:id="deleteProj" mnemonicParsing="false" onAction="#deleteProjFired" text="Delete" />
+      </children>
+    </HBox>
+    <HBox id="HBox" alignment="CENTER" fillHeight="false" layoutY="73.0" maxHeight="-Infinity" maxWidth="-1.0" minHeight="-Infinity" prefHeight="45.0" prefWidth="456.9999000000025" spacing="10.0" AnchorPane.leftAnchor="443.0" AnchorPane.rightAnchor="0.0">
+      <children>
+        <Button id="button1" fx:id="newIssue" onAction="#newIssueFired" text="New" />
+        <Button id="button1" fx:id="saveIssue" onAction="#saveIssueFired" text="Save" />
+        <Button id="button1" fx:id="deleteIssue" onAction="#deleteIssueFired" text="Delete" />
+      </children>
+      <padding>
+        <Insets />
+      </padding>
+    </HBox>
+    <SplitPane dividerPositions="0.5000000555555604" focusTraversable="true" prefHeight="412.0" prefWidth="899.9998779296875" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="118.0">
+      <items>
+        <ListView fx:id="projList" editable="true" prefHeight="-1.0" prefWidth="-1.0" styleClass="darkList" />
+        <SplitPane id="splitPaneVertical1" dividerPositions="0.49878345498783455" focusTraversable="true" orientation="VERTICAL" prefHeight="425.0" prefWidth="453.0000999999975">
           <items>
             <TableView id="tableView" fx:id="table" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0" tableMenuButtonVisible="false">
               <columns>
@@ -23,7 +40,7 @@
                 <TableColumn maxWidth="500.0" minWidth="250.0" prefWidth="250.0" text="Synopsis" visible="true" fx:id="colSynopsis" />
               </columns>
             </TableView>
-            <AnchorPane id="anchorPane4" fx:id="details" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+            <AnchorPane id="anchorPane4" fx:id="details" minHeight="0.0" minWidth="0.0" prefHeight="173.0" prefWidth="454.0">
               <children>
                 <TextArea id="textArea1" fx:id="descriptionValue" prefHeight="282.0" prefWidth="558.0" styleClass="descriptionValue" text="TextArea" wrapText="true" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="70.0" />
                 <Label id="label2" layoutX="20.0" layoutY="49.0" text="DESCRIPTION:" />
@@ -37,35 +54,8 @@
             </AnchorPane>
           </items>
         </SplitPane>
-        <ListView fx:id="projList" editable="true" prefHeight="-1.0" prefWidth="-1.0" styleClass="darkList" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="CENTER" GridPane.vgrow="ALWAYS">
-          <GridPane.margin>
-            <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" fx:id="x1" />
-          </GridPane.margin>
-        </ListView>
-        <HBox id="HBox" alignment="CENTER" fillHeight="false" maxHeight="1.7976931348623157E308" minHeight="35.0" padding="$x1" prefHeight="-1.0" prefWidth="-1.0" spacing="10.0" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="0" GridPane.valignment="CENTER" GridPane.vgrow="SOMETIMES">
-          <children>
-            <Button fx:id="newProj" mnemonicParsing="false" onAction="#newProjFired" text="New" />
-            <Button fx:id="renameProj" mnemonicParsing="false" onAction="#renameProjFired" text="Rename" />
-            <Button fx:id="deleteProj" mnemonicParsing="false" onAction="#deleteProjFired" text="Delete" />
-          </children>
-        </HBox>
-        <HBox id="HBox" alignment="CENTER" fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="-1.0" minHeight="40.0" padding="$x1" prefWidth="-1.0" spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-          <children>
-            <Button id="button1" fx:id="newIssue" onAction="#newIssueFired" text="New" />
-            <Button id="button1" fx:id="saveIssue" onAction="#saveIssueFired" text="Save" />
-            <Button id="button1" fx:id="deleteIssue" onAction="#deleteIssueFired" text="Delete" />
-          </children>
-        </HBox>
-      </children>
-      <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-      </columnConstraints>
-      <rowConstraints>
-        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-      </rowConstraints>
-    </GridPane>
+      </items>
+    </SplitPane>
     <ImageView id="IssueTrackingLite" layoutX="14.0" layoutY="20.0">
       <image>
         <Image url="@IssueTrackingLite.png" preserveRatio="true" smooth="true" />

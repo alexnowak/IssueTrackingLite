@@ -42,7 +42,7 @@ public class Main extends Application {
             AnchorPane page = (AnchorPane) FXMLLoader.load(Main.class.getResource("IssueTrackingLite.fxml"));
             Scene scene = new Scene(page);
             primaryStage.setScene(scene);
-            primaryStage.setTitle("Issue Tracking Lite Sample");
+            primaryStage.setTitle("Issue Tracking Lite");
             primaryStage.show();
         } catch (IOException ex) {
             logger.log(Level.SEVERE,"JavaFX Error", ex);

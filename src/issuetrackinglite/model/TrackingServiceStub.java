@@ -141,7 +141,17 @@ public class TrackingServiceStub {
         }
     }
 
+    public void renameProject(int projId, String newProjName) throws SQLException {
+        try (Statement s = Database.getInstance().getConnection().createStatement()) {
+           int result = s.executeUpdate("update Project set "
+                   +"Name='" + newProjName + "' "
+                   +"where Id="+projId);
+           logger.info("Project ID"+projId+" renamed to \"" + newProjName + "\" successfully. (SQLCode="+result+")");
+        }
+    }
 
+
+    
     public void deleteIssue(Issue issue) throws SQLException {
         try (Statement s = Database.getInstance().getConnection().createStatement()) {
            int result = s.executeUpdate("delete from Issue where Id="+issue.getId());

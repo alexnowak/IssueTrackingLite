@@ -9,11 +9,12 @@ import issuetrackinglite.model.ProjectCell;
 import issuetrackinglite.model.TrackingServiceStub;
 import java.net.URL;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -24,32 +25,30 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.application.Platform;
-import javafx.scene.control.cell.TextFieldListCell;
 import javafx.util.Callback;
-import dialogs.FXOptionPane;
-import java.sql.SQLIntegrityConstraintViolationException;
 
 
 public class IssueTrackingLiteController {
 
     static final Logger logger = Logger.getLogger(IssueTrackingLiteController.class.getName());
 
-    @FXML
-    private ResourceBundle resources;
-
-    @FXML
     private URL location;
 
     @FXML
     Button newProj;
-    @FXML
-    Button renameProj;
     @FXML
     Button deleteProj;
 
@@ -86,7 +85,7 @@ public class IssueTrackingLiteController {
     // Observeable properties  -----------------------------------------------------
     private ObservableList<Issue> tableContent = FXCollections.observableArrayList();
 
-    TrackingServiceStub model = null;
+    private TrackingServiceStub model = null;
     private TextField statusValue = new TextField();
 
     /**
@@ -121,10 +120,22 @@ public class IssueTrackingLiteController {
             Platform.exit();
         }
 
-        // Make list editable
+        // Make project list editable
+        
+        
+//        ListView<String> list = new ListView<>(items);
+//        list.setEditable(true);
+//        list.setCellFactory(new Callback<ListView<String>, 
+//            ListCell<String>>() {
+//                @Override 
+//                public ListCell<String> call(ListView<String> list) {
+//                    return new TFListCell();
+//                }
+//            }
+//        );
+        
         projList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         projList.setEditable(true);
-
         projList.setCellFactory(new Callback<ListView<Project>, ListCell<Project>>() {
             @Override
             public ListCell<Project> call(ListView<Project> list) {
@@ -132,14 +143,6 @@ public class IssueTrackingLiteController {
             }
         });
         
-        
-//        projList.setCellFactory(new Callback<ListView<Project>,ListCell<String>>() {
-//            @Override
-//            public ListCell<String> call(ListView<Project> list) {
-//                return new Project("Hulla");
-//            }   
-//        });
-
         /**
          * Listen to changes in the project list selection, and updates the 
          * issue table widget and DeleteIssue and NewIssue buttons accordingly.
@@ -187,17 +190,7 @@ public class IssueTrackingLiteController {
         projList.getItems().add(proj);
     }
     
-    /**
-     * Called when the Rename Project button is fired.
-     *
-     * @param event the action event.
-     */
-    @FXML
-    public void renameProjFired(ActionEvent event) {
-        logger.info("Rename Project button event");
-      //  projList.edit(1);
-    }
-    
+  
     /**
      * Called when the Delete Project button is fired.
      *
@@ -205,7 +198,7 @@ public class IssueTrackingLiteController {
      */
     @FXML
     public void deleteProjFired(ActionEvent event) {
-        logger.info("New Project button event");
+        logger.info("TODO: New Project button event");
     }
     
     
